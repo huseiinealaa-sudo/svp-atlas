@@ -1,0 +1,21 @@
+# ملفات نظام التشغيل
+.DS_Store
+Thumbs.db
+
+# المحررات
+.vscode/
+.idea/
+*.swp
+
+# مخرجات البناء والاعتماديات
+node_modules/
+dist/
+*.log
+
+# أسرار — لا تُرفع أبداً
+.env
+.env.*
+!.env.example
+
+# إعدادات Claude Code المحلية
+.claude/settings.local.json
