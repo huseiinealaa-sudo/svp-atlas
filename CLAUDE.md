@@ -73,7 +73,7 @@ iPad; asking for approval on each file write would make the build impossible to 
 ## Phase tracker — update this line as you go
 
 ```
-CURRENT PHASE: A (not started)
+CURRENT PHASE: A (complete — PR open toward main, awaiting approval). B not started.
 ```
 
 A skeleton · B primitives · C atlas (~91 parts) · D interaction · E content · F mechanism ·
