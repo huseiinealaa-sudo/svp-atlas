@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -7,51 +7,45 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { CAMERA_HOME, LIGHTING, PALETTE } from '../data/theme';
 import { FLOW_TUBE, mm } from '../data/geometry';
 import { useStore } from '../store/useStore';
+import PrimitiveGallery, { GALLERY_BOX } from './PrimitiveGallery';
+import { framePosition, type Box } from './framing';
 
 /**
- * Phase A placeholder geometry: the Flow Tube as a single cylinder.
- *
- * CylinderGeometry is built along +Y, so it is rotated onto +X — the direction of
- * flow (SPEC.md §4.3). Dimensions come from `data/geometry.ts` and are converted
- * here, at the render boundary, and nowhere else (SPEC.md §1.5).
- *
- * This becomes a `tube` primitive row in Phase B / C. It is not a component per part.
+ * Returns the camera to its home *angle* and re-solves the distance for the current
+ * viewport, on mount, on every reset, and on rotation between the two iPad
+ * orientations (SPEC.md §1.6).
  */
-function FlowTubePlaceholder() {
-  return (
-    <mesh rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
-      <cylinderGeometry
-        args={[
-          mm(FLOW_TUBE.outerDiameter / 2),
-          mm(FLOW_TUBE.outerDiameter / 2),
-          mm(FLOW_TUBE.length),
-          64,
-          1,
-          true,
-        ]}
-      />
-      <meshStandardMaterial
-        color={PALETTE.flowTube}
-        metalness={0.55}
-        roughness={0.42}
-        side={THREE.DoubleSide}
-      />
-    </mesh>
-  );
-}
-
-/** Returns the OrbitControls to the home pose whenever the store token changes. */
-function CameraHome({ controls }: { controls: React.RefObject<OrbitControlsImpl> }) {
+function CameraHome({
+  controls,
+  box,
+}: {
+  controls: React.RefObject<OrbitControlsImpl>;
+  box: Box;
+}) {
   const token = useStore((s) => s.cameraResetToken);
+  const camera = useThree((s) => s.camera);
+  const width = useThree((s) => s.size.width);
+  const height = useThree((s) => s.size.height);
+  const { halfWidth, halfHeight, halfDepth } = box;
 
   useEffect(() => {
-    if (token === 0) return; // skip the initial mount; the camera is already home
+    if (height === 0) return;
+    const position = framePosition(
+      CAMERA_HOME.position,
+      CAMERA_HOME.target,
+      { halfWidth, halfHeight, halfDepth },
+      CAMERA_HOME.fov,
+      width / height,
+    );
+    camera.position.copy(position);
     const c = controls.current;
-    if (!c) return;
-    c.object.position.set(...CAMERA_HOME.position);
-    c.target.set(...CAMERA_HOME.target);
-    c.update();
-  }, [token, controls]);
+    if (c) {
+      c.target.set(...CAMERA_HOME.target);
+      c.update();
+    } else {
+      camera.lookAt(...CAMERA_HOME.target);
+    }
+  }, [token, camera, controls, width, height, halfWidth, halfHeight, halfDepth]);
 
   return null;
 }
@@ -89,12 +83,16 @@ export default function Scene() {
         />
         <directionalLight position={LIGHTING.fillPosition} intensity={LIGHTING.fillIntensity} />
 
-        <FlowTubePlaceholder />
+        {/*
+          Phase B — SPEC.md §11 B: the ten primitive builders, each demoed once.
+          Phase C replaces this rig with <Assembly /> driven by data/parts.ts.
+        */}
+        <PrimitiveGallery />
 
         {/* Ground reference, so orbiting reads as orbiting. */}
         <gridHelper
           args={[12, 24, PALETTE.structure, PALETTE.structure]}
-          position={[0, -mm(FLOW_TUBE.outerDiameter / 2) - 0.35, 0]}
+          position={[0, -mm(FLOW_TUBE.outerDiameter / 2) - 0.55, 0]}
         />
 
         <OrbitControls
@@ -104,7 +102,7 @@ export default function Scene() {
           enableDamping
           dampingFactor={0.08}
           minDistance={0.6}
-          maxDistance={16}
+          maxDistance={24}
           // One finger orbits, two fingers pinch-zoom and pan — the iPad gestures
           // a user expects. SPEC.md §1.6.
           touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
@@ -114,7 +112,14 @@ export default function Scene() {
             RIGHT: THREE.MOUSE.PAN,
           }}
         />
-        <CameraHome controls={controls} />
+        <CameraHome
+          controls={controls}
+          box={{
+            halfWidth: mm(GALLERY_BOX.halfWidth),
+            halfHeight: mm(GALLERY_BOX.halfHeight),
+            halfDepth: mm(GALLERY_BOX.halfDepth),
+          }}
+        />
       </Suspense>
     </Canvas>
   );
