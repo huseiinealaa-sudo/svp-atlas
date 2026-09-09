@@ -18,13 +18,13 @@ clarifying questions — every value you need is here. Follow the Build Phases i
 
 | Rank | What | Why |
 |---|---|---|
-| **1** | The parts. ~92 individually selectable components with real OEM item numbers. | This is the product. |
+| **1** | The parts. 91 individually selectable components with real OEM item numbers. | This is the product. |
 | **2** | Explode / assemble, isolate, hide-by-system, search. | This is how the user explores. |
 | **3** | Rich bilingual content per part: function and failure mode. | This makes it teaching, not decoration. |
 | **4** | Visual animation of the internal mechanism during a prove. | This is "seeing what happens inside." |
 | **5** | A compact numeric readout at the end of a run. | Nice to have. Build it last. |
 
-If you run short of time or context, **cut from the bottom, never from the top.** An atlas with 92
+If you run short of time or context, **cut from the bottom, never from the top.** An atlas with 91
 beautifully labelled parts and no calculation engine is a success. A calculation engine with 20
 parts is a failure.
 
@@ -37,7 +37,7 @@ parts is a failure.
 2. **No browser storage.** No `localStorage`, `sessionStorage`, `IndexedDB`, cookies. State is in
    memory only.
 3. **Primitive-driven geometry.** Do NOT write one React component per part. Write ~10 primitive
-   builders and let a data table instantiate all ~92 parts. See §4.
+   builders and let a data table instantiate all 91 parts. See §4.
 4. **Part IDs are frozen** once written.
 5. **All dimensions in millimetres** in `src/data/`. Convert once at the render boundary with
    `SCENE_SCALE = 0.001`.
@@ -69,7 +69,7 @@ svp-atlas/
     ├── main.tsx · App.tsx · index.css
     ├── data/
     │   ├── geometry.ts      # dimensional constants, mm
-    │   ├── parts.ts         # THE PART TABLE — ~92 rows, drives everything
+    │   ├── parts.ts         # THE PART TABLE — 91 rows, drives everything
     │   ├── content.ts       # bilingual text per part
     │   └── siteData.ts      # SVP-PR-8 identity + reference run
     ├── three/
@@ -94,9 +94,9 @@ svp-atlas/
 
 ### 4.1 The rule
 
-`parts.ts` is a flat array of ~92 rows. Each row names a **primitive** and its parameters.
+`parts.ts` is a flat array of 91 rows. Each row names a **primitive** and its parameters.
 `Assembly.tsx` maps over the array and renders each row. Adding a part means adding a row, never
-writing a component. This is what makes ~92 parts affordable in a single build.
+writing a component. This is what makes 91 parts affordable in a single build.
 
 ```ts
 export interface Part {
@@ -204,7 +204,7 @@ export const EST = {
 
 ---
 
-## 5. The part table — ~92 rows
+## 5. The part table — 91 rows
 
 Ten systems. OEM numbers are **real Calibron item numbers** from the maintenance chapter of doc
 44103445 Rev 0 — display them, they are what makes this authentic.
@@ -293,7 +293,7 @@ Ten systems. OEM numbers are **real Calibron item numbers** from the maintenance
 `SVP-STR-SUP2` Flow Tube Support (Downstream) · `SVP-STR-LIFT` Lifting Lugs ·
 `SVP-STR-NP` Nameplate (SVP-PR-8 · PR85-003 · SV085SE3)
 
-**Total ≈ 91 pieces.** Show the count in the header, Human Atlas style.
+**Total 91 pieces**, enumerated by name above. Show the count in the header, Human Atlas style.
 
 ### Explode vectors
 

@@ -5,9 +5,10 @@ import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 import { CAMERA_HOME, LIGHTING, PALETTE } from '../data/theme';
-import { FLOW_TUBE, mm } from '../data/geometry';
+import { OVERALL, EST, mm, mmVec } from '../data/geometry';
 import { useStore } from '../store/useStore';
-import PrimitiveGallery, { GALLERY_BOX } from './PrimitiveGallery';
+import Assembly from './Assembly';
+import { ASSEMBLY_BOUNDS } from '../data/parts';
 import { framePosition, type Box } from './framing';
 
 /**
@@ -18,21 +19,28 @@ import { framePosition, type Box } from './framing';
 function CameraHome({
   controls,
   box,
+  target,
 }: {
   controls: React.RefObject<OrbitControlsImpl>;
   box: Box;
+  /** Scene units. The machine's centre, not the world origin: the skid sits 0.9 m
+   *  below the bore and the piping runs 2.3 m each way, so framing about [0,0,0]
+   *  would hang the model off the bottom of the screen. */
+  target: [number, number, number];
 }) {
   const token = useStore((s) => s.cameraResetToken);
   const camera = useThree((s) => s.camera);
   const width = useThree((s) => s.size.width);
   const height = useThree((s) => s.size.height);
   const { halfWidth, halfHeight, halfDepth } = box;
+  const [tx, ty, tz] = target;
 
   useEffect(() => {
     if (height === 0) return;
+    const centre: [number, number, number] = [tx, ty, tz];
     const position = framePosition(
       CAMERA_HOME.position,
-      CAMERA_HOME.target,
+      centre,
       { halfWidth, halfHeight, halfDepth },
       CAMERA_HOME.fov,
       width / height,
@@ -40,12 +48,12 @@ function CameraHome({
     camera.position.copy(position);
     const c = controls.current;
     if (c) {
-      c.target.set(...CAMERA_HOME.target);
+      c.target.set(tx, ty, tz);
       c.update();
     } else {
-      camera.lookAt(...CAMERA_HOME.target);
+      camera.lookAt(tx, ty, tz);
     }
-  }, [token, camera, controls, width, height, halfWidth, halfHeight, halfDepth]);
+  }, [token, camera, controls, width, height, halfWidth, halfHeight, halfDepth, tx, ty, tz]);
 
   return null;
 }
@@ -75,24 +83,23 @@ export default function Scene() {
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-camera-near={0.5}
-          shadow-camera-far={30}
-          shadow-camera-left={-4}
-          shadow-camera-right={4}
-          shadow-camera-top={4}
-          shadow-camera-bottom={-4}
+          shadow-camera-far={40}
+          shadow-camera-left={-3.6}
+          shadow-camera-right={3.6}
+          shadow-camera-top={3.6}
+          shadow-camera-bottom={-3.6}
         />
         <directionalLight position={LIGHTING.fillPosition} intensity={LIGHTING.fillIntensity} />
 
-        {/*
-          Phase B — SPEC.md §11 B: the ten primitive builders, each demoed once.
-          Phase C replaces this rig with <Assembly /> driven by data/parts.ts.
-        */}
-        <PrimitiveGallery />
+        {/* SPEC.md §4.1 — 91 rows of data/parts.ts, drawn by the ten primitives. */}
+        <Assembly />
 
         {/* Ground reference, so orbiting reads as orbiting. */}
+        {/* Ground plane at the underside of the base skid, so orbiting reads as
+            orbiting and the machine reads as standing on something. */}
         <gridHelper
-          args={[12, 24, PALETTE.structure, PALETTE.structure]}
-          position={[0, -mm(FLOW_TUBE.outerDiameter / 2) - 0.55, 0]}
+          args={[16, 32, PALETTE.structure, PALETTE.structure]}
+          position={[0, -mm(OVERALL.centrelineHeight + EST.baseThk), 0]}
         />
 
         <OrbitControls
@@ -102,7 +109,7 @@ export default function Scene() {
           enableDamping
           dampingFactor={0.08}
           minDistance={0.6}
-          maxDistance={24}
+          maxDistance={40}
           // One finger orbits, two fingers pinch-zoom and pan — the iPad gestures
           // a user expects. SPEC.md §1.6.
           touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
@@ -115,10 +122,11 @@ export default function Scene() {
         <CameraHome
           controls={controls}
           box={{
-            halfWidth: mm(GALLERY_BOX.halfWidth),
-            halfHeight: mm(GALLERY_BOX.halfHeight),
-            halfDepth: mm(GALLERY_BOX.halfDepth),
+            halfWidth: mm(ASSEMBLY_BOUNDS.halfWidth),
+            halfHeight: mm(ASSEMBLY_BOUNDS.halfHeight),
+            halfDepth: mm(ASSEMBLY_BOUNDS.halfDepth),
           }}
+          target={mmVec(ASSEMBLY_BOUNDS.centre)}
         />
       </Suspense>
     </Canvas>

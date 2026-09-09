@@ -3,6 +3,8 @@ import * as THREE from 'three';
 
 import { mm, mmVec } from '../../data/geometry';
 import { useMaterial } from './material';
+import { instanceOffsets } from './instancing';
+import { Repeated } from './repeat';
 import { p, type PrimitiveProps } from './types';
 
 /**
@@ -19,6 +21,8 @@ export default function Helix({
   color,
   position = [0, 0, 0],
   rotation,
+  qty = 1,
+  instance,
   opacity = 1,
   emissive,
   emissiveIntensity,
@@ -60,6 +64,8 @@ export default function Helix({
     return new THREE.TubeGeometry(curve, steps, wireR, 8, false);
   }, [coilR, wireR, length, turns, segmentsPerTurn]);
 
+  const offsets = useMemo(() => instanceOffsets(qty, instance), [qty, instance]);
+
   return (
     <group
       position={mmVec(position)}
@@ -69,7 +75,9 @@ export default function Helix({
       onPointerOver={onPointerOver}
       onPointerOut={onPointerOut}
     >
-      <mesh geometry={geometry} material={material} castShadow receiveShadow />
+      <Repeated offsets={offsets}>
+        <mesh geometry={geometry} material={material} castShadow receiveShadow />
+      </Repeated>
     </group>
   );
 }
