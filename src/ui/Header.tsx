@@ -31,7 +31,7 @@ export default function Header() {
       </div>
 
       <span className="shrink-0 rounded-full border border-edge px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-muted">
-        Phase A · Skeleton
+        Phase B · Primitives
       </span>
     </header>
   );
