@@ -3,6 +3,8 @@ import * as THREE from 'three';
 
 import { mm, mmVec } from '../../data/geometry';
 import { useMaterial } from './material';
+import { instanceOffsets } from './instancing';
+import { Repeated } from './repeat';
 import { p, type PrimitiveProps } from './types';
 
 /**
@@ -19,6 +21,8 @@ export default function Tube({
   color,
   position = [0, 0, 0],
   rotation,
+  qty = 1,
+  instance,
   opacity = 1,
   emissive,
   emissiveIntensity,
@@ -57,6 +61,8 @@ export default function Tube({
     [innerR, outerR, segments],
   );
 
+  const offsets = useMemo(() => instanceOffsets(qty, instance), [qty, instance]);
+
   return (
     <group
       position={mmVec(position)}
@@ -66,27 +72,29 @@ export default function Tube({
       onPointerOver={onPointerOver}
       onPointerOut={onPointerOut}
     >
-      {/* +Y → +X: the tube lies along the flow axis. */}
-      <group rotation={[0, 0, Math.PI / 2]}>
-        <mesh geometry={outer} material={material} castShadow receiveShadow />
-        {innerR > 0 && <mesh geometry={inner} material={material} castShadow receiveShadow />}
-      </group>
-      {innerR > 0 && (
-        <>
-          <mesh
-            geometry={cap}
-            material={material}
-            position={[length / 2, 0, 0]}
-            rotation={[0, Math.PI / 2, 0]}
-          />
-          <mesh
-            geometry={cap}
-            material={material}
-            position={[-length / 2, 0, 0]}
-            rotation={[0, -Math.PI / 2, 0]}
-          />
-        </>
-      )}
+      <Repeated offsets={offsets}>
+        {/* +Y → +X: the tube lies along the flow axis. */}
+        <group rotation={[0, 0, Math.PI / 2]}>
+          <mesh geometry={outer} material={material} castShadow receiveShadow />
+          {innerR > 0 && <mesh geometry={inner} material={material} castShadow receiveShadow />}
+        </group>
+        {innerR > 0 && (
+          <>
+            <mesh
+              geometry={cap}
+              material={material}
+              position={[length / 2, 0, 0]}
+              rotation={[0, Math.PI / 2, 0]}
+            />
+            <mesh
+              geometry={cap}
+              material={material}
+              position={[-length / 2, 0, 0]}
+              rotation={[0, -Math.PI / 2, 0]}
+            />
+          </>
+        )}
+      </Repeated>
     </group>
   );
 }

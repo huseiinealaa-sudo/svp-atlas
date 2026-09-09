@@ -1,8 +1,9 @@
+import { PART_COUNT, SYSTEMS } from '../data/parts';
 import { SITE } from '../data/siteData';
 
 /**
- * SPEC.md §7 — the Human Atlas header: status dot, product name, identity line.
- * The live piece count replaces the phase chip once `parts.ts` exists (Phase C).
+ * SPEC.md §7 — the Human Atlas header: status dot, product name, identity line and
+ * the live piece count, which is read from the part table rather than written down.
  */
 export default function Header() {
   return (
@@ -26,12 +27,14 @@ export default function Header() {
         </h1>
 
         <p className="mt-1 truncate font-mono text-[11px] text-muted" dir="ltr">
+          <span className="text-text">{PART_COUNT}</span> modeled pieces ·{' '}
+          <span className="text-text">{SYSTEMS.length}</span> systems ·{' '}
           {SITE.manufacturer} · {SITE.model} · {SITE.tag}
         </p>
       </div>
 
       <span className="shrink-0 rounded-full border border-edge px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-muted">
-        Phase B · Primitives
+        Phase C · Atlas
       </span>
     </header>
   );

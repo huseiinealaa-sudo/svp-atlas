@@ -3,6 +3,8 @@ import * as THREE from 'three';
 
 import { mm, mmVec } from '../../data/geometry';
 import { useMaterial } from './material';
+import { instanceOffsets } from './instancing';
+import { Repeated } from './repeat';
 import { p, type PrimitiveProps } from './types';
 
 /**
@@ -12,12 +14,16 @@ import { p, type PrimitiveProps } from './types';
  * params (mm): diameter · length · endDiameter · segments
  *
  * `endDiameter` tapers the far end when a shaft steps down. Built along +X.
+ * `qty` + `instance` repeat the row — the Bearing Guide Bars are two parallel bars
+ * under one part number.
  */
 export default function Rod({
   params,
   color,
   position = [0, 0, 0],
   rotation,
+  qty = 1,
+  instance,
   opacity = 1,
   emissive,
   emissiveIntensity,
@@ -45,6 +51,8 @@ export default function Rod({
     [radius, endRadius, length, segments],
   );
 
+  const offsets = useMemo(() => instanceOffsets(qty, instance), [qty, instance]);
+
   return (
     <group
       position={mmVec(position)}
@@ -54,9 +62,11 @@ export default function Rod({
       onPointerOver={onPointerOver}
       onPointerOut={onPointerOut}
     >
-      <group rotation={[0, 0, -Math.PI / 2]}>
-        <mesh geometry={geometry} material={material} castShadow receiveShadow />
-      </group>
+      <Repeated offsets={offsets}>
+        <group rotation={[0, 0, -Math.PI / 2]}>
+          <mesh geometry={geometry} material={material} castShadow receiveShadow />
+        </group>
+      </Repeated>
     </group>
   );
 }

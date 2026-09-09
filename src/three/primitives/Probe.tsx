@@ -3,6 +3,8 @@ import * as THREE from 'three';
 
 import { mm, mmVec } from '../../data/geometry';
 import { useMaterial } from './material';
+import { instanceOffsets } from './instancing';
+import { Repeated } from './repeat';
 import { p, type PrimitiveProps } from './types';
 
 /**
@@ -16,6 +18,9 @@ import { p, type PrimitiveProps } from './types';
  * row rotates this to look across the path the **Flag** travels — the detectors
  * never see the piston, only the Flag (CLAUDE.md, the one insight).
  *
+ * Body + stem is also a Cam Follower (roller on its stud), a Shock Absorber and a
+ * Drain or Vent Valve, so those rows use this builder with `qty` + `instance`.
+ *
  * `emissive` is how a detector lamp lights green when it triggers in Phase F.
  */
 export default function Probe({
@@ -23,6 +28,8 @@ export default function Probe({
   color,
   position = [0, 0, 0],
   rotation,
+  qty = 1,
+  instance,
   opacity = 1,
   emissive,
   emissiveIntensity,
@@ -55,6 +62,8 @@ export default function Probe({
     [stemR, stemLen, segments],
   );
 
+  const offsets = useMemo(() => instanceOffsets(qty, instance), [qty, instance]);
+
   return (
     <group
       position={mmVec(position)}
@@ -64,16 +73,18 @@ export default function Probe({
       onPointerOver={onPointerOver}
       onPointerOut={onPointerOut}
     >
-      <mesh geometry={body} material={material} castShadow receiveShadow />
-      {stemLen > 0 && (
-        <mesh
-          geometry={stem}
-          material={material}
-          position={[0, -(bodyLen / 2 + stemLen / 2), 0]}
-          castShadow
-          receiveShadow
-        />
-      )}
+      <Repeated offsets={offsets}>
+        <mesh geometry={body} material={material} castShadow receiveShadow />
+        {stemLen > 0 && (
+          <mesh
+            geometry={stem}
+            material={material}
+            position={[0, -(bodyLen / 2 + stemLen / 2), 0]}
+            castShadow
+            receiveShadow
+          />
+        )}
+      </Repeated>
     </group>
   );
 }

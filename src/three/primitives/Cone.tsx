@@ -3,6 +3,8 @@ import * as THREE from 'three';
 
 import { mm, mmVec } from '../../data/geometry';
 import { useMaterial } from './material';
+import { instanceOffsets } from './instancing';
+import { Repeated } from './repeat';
 import { p, type PrimitiveProps } from './types';
 
 /**
@@ -13,12 +15,17 @@ import { p, type PrimitiveProps } from './types';
  *
  * The taper points along **+X, downstream**, which is the direction the Poppet
  * seats — it closes at LAUNCH and reopens on line pressure (SPEC.md §8).
+ *
+ * `qty` + `instance` (linear, along the row's own axis) stack the row: a Belleville
+ * Spring is a truncated cone, and it is fitted six or eight high.
  */
 export default function Cone({
   params,
   color,
   position = [0, 0, 0],
   rotation,
+  qty = 1,
+  instance,
   opacity = 1,
   emissive,
   emissiveIntensity,
@@ -48,6 +55,8 @@ export default function Cone({
     [baseR, tipR, length, segments],
   );
 
+  const offsets = useMemo(() => instanceOffsets(qty, instance), [qty, instance]);
+
   return (
     <group
       position={mmVec(position)}
@@ -58,9 +67,11 @@ export default function Cone({
       onPointerOut={onPointerOut}
     >
       {/* +Y → +X so the small end faces downstream. */}
-      <group rotation={[0, 0, -Math.PI / 2]}>
-        <mesh geometry={geometry} material={material} castShadow receiveShadow />
-      </group>
+      <Repeated offsets={offsets}>
+        <group rotation={[0, 0, -Math.PI / 2]}>
+          <mesh geometry={geometry} material={material} castShadow receiveShadow />
+        </group>
+      </Repeated>
     </group>
   );
 }

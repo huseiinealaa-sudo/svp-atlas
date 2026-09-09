@@ -3,6 +3,7 @@ import * as THREE from 'three';
 
 import { mm, mmVec } from '../../data/geometry';
 import { useMaterial } from './material';
+import { InstancedSet, instanceOffsets } from './instancing';
 import { p, type PrimitiveProps } from './types';
 
 /**
@@ -13,6 +14,10 @@ import { p, type PrimitiveProps } from './types';
  *
  * A `boreDiameter > 0` makes it an annulus — which is what a flange or a washer
  * actually is. Built along +X, the flow axis.
+ *
+ * With `instance` the row becomes a repeated set through one `InstancedMesh` — the
+ * Sprocket Set is two discs 2.4 m apart, not a stack. Without `instance`, `qty > 1`
+ * stacks copies face to face, which is what a washer pack is.
  */
 export default function Disc({
   params,
@@ -20,6 +25,7 @@ export default function Disc({
   position = [0, 0, 0],
   rotation,
   qty = 1,
+  instance,
   opacity = 1,
   emissive,
   emissiveIntensity,
@@ -58,6 +64,16 @@ export default function Disc({
     return new THREE.LatheGeometry(profile, segments);
   }, [outerR, innerR, thickness, segments]);
 
+  const offsets = useMemo(() => instanceOffsets(qty, instance), [qty, instance]);
+
+  // The lathe/cylinder profile is built about +Y; bake the turn onto +X into the
+  // geometry so the instanced copies need translation only.
+  const axial = useMemo(() => {
+    const g = geometry.clone();
+    g.rotateZ(Math.PI / 2);
+    return g;
+  }, [geometry]);
+
   return (
     <group
       position={mmVec(position)}
@@ -67,16 +83,25 @@ export default function Disc({
       onPointerOver={onPointerOver}
       onPointerOut={onPointerOut}
     >
-      <group rotation={[0, 0, Math.PI / 2]}>
-        <mesh geometry={geometry} material={material} castShadow receiveShadow />
-      </group>
-      {/* `qty` on a disc row means a stack (a Belleville stack, a washer pack). */}
-      {qty > 1 &&
-        Array.from({ length: qty - 1 }, (_, i) => (
-          <group key={i} position={[thickness * (i + 1), 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <mesh geometry={geometry} material={material} castShadow receiveShadow />
-          </group>
-        ))}
+      {instance ? (
+        <InstancedSet geometry={axial} material={material} offsets={offsets} />
+      ) : (
+        <>
+          <mesh geometry={axial} material={material} castShadow receiveShadow />
+          {/* Without `instance`, `qty` means a stack: a Belleville pack, a washer pack. */}
+          {qty > 1 &&
+            Array.from({ length: qty - 1 }, (_, i) => (
+              <mesh
+                key={i}
+                geometry={axial}
+                material={material}
+                position={[thickness * (i + 1), 0, 0]}
+                castShadow
+                receiveShadow
+              />
+            ))}
+        </>
+      )}
     </group>
   );
 }

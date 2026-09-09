@@ -14,8 +14,8 @@ The full specification is in [`SPEC.md`](./SPEC.md); the working rules are in
 | Phase | Scope | State |
 |---|---|---|
 | A | Skeleton — Vite + React + TS + Tailwind + R3F, one cylinder, touch orbit | complete |
-| **B** | The ten geometry primitives, each demoed once | complete |
-| C | The atlas — `parts.ts` (~91 rows) + `Assembly.tsx` | not started |
+| B | The ten geometry primitives, each demoed once | complete |
+| **C** | The atlas — `parts.ts` (91 rows) + `Assembly.tsx` | complete |
 | D | Interaction — select, isolate, systems, search, explode, cutaway, labels | not started |
 | E | Content — ~91 bilingual entries | not started |
 | F | Mechanism animation | not started |
