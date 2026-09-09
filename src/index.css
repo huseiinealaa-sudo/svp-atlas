@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: theme('colors.ink');
+    color: theme('colors.text');
+    font-family: theme('fontFamily.sans');
+    -webkit-font-smoothing: antialiased;
+    /* Touch-first: no rubber-band scroll, no double-tap zoom, no iOS text
+       auto-inflation when the iPad rotates. SPEC.md §1.6. */
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+  }
+
+  /* The 3D canvas owns its gestures outright.
+     `!important` is deliberate: three-stdlib's OrbitControls writes
+     `touch-action` straight onto the canvas element's inline style, and an
+     inline style beats any selector. Left at `auto`, iOS Safari claims the
+     pinch for page zoom instead of camera dolly — it has ignored
+     `user-scalable=no` since iOS 10 — which breaks the touch-first rule
+     in SPEC.md §1.6. */
+  canvas {
+    display: block;
+    touch-action: none !important;
+    outline: none;
+  }
+
+  /* Arabic prose picks up its own face wherever it appears in an LTR container. */
+  [lang='ar'] {
+    font-family: theme('fontFamily.arabic');
+  }
+}
