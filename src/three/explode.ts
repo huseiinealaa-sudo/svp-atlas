@@ -8,7 +8,7 @@ import type { Part } from '../data/parts';
  * SPEC.md §11 D and §13 both require that **explode 0 → 100 → 0 returns to the exact
  * original transforms**, and a guarantee that strong has to be testable outside the
  * renderer. `scripts/verify-explode.ts` imports this file directly and sweeps every
- * one of the 91 rows through a full cycle, asserting bitwise equality on return.
+ * one of the 93 rows through a full cycle, asserting bitwise equality on return.
  *
  * The guarantee holds by construction, not by luck:
  *
@@ -16,7 +16,7 @@ import type { Part } from '../data/parts';
  *     accumulates a delta into a live transform, so there is no error to build up,
  *     however many times the slider is dragged.
  *   - `t === 0` returns the base triple itself. That makes the round trip an
- *     identity rather than an arithmetic coincidence, and it also skips 91 array
+ *     identity rather than an arithmetic coincidence, and it also skips 93 array
  *     allocations per frame while the model sits assembled — the common case.
  *
  * Positions in and out are **millimetres** (SPEC.md §1.5). `explodedScenePosition`

@@ -12,6 +12,6 @@ export const SITE = {
   model: 'Model 85',
   manufacturer: 'Honeywell Enraf · Calibron',
   flowComputer: 'SFC332P',
-  /** SPEC.md §5 — the atlas is complete at ~91 individually selectable pieces. */
-  targetPieceCount: 91,
+  /** SPEC.md §5 — the atlas is complete at ~93 individually selectable pieces. */
+  targetPieceCount: 93,
 } as const;

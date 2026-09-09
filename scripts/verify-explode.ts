@@ -4,7 +4,7 @@
  * SPEC.md §11 D: "Explode must return to exact original transforms."
  * SPEC.md §13:   "Explode 0→100→0 is smooth and returns to exact original positions."
  *
- * "Exact" is taken literally here: every one of the 91 rows × 3 axes must come back
+ * "Exact" is taken literally here: every one of the 93 rows × 3 axes must come back
  * **bit for bit**, compared with `Object.is`, not within a tolerance. A tolerance
  * would pass an implementation that accumulates a little error on every drag, which
  * is precisely the failure this check exists to rule out.
@@ -51,7 +51,7 @@ console.log(`Part table: ${PARTS.length} rows`);
 
 try {
   validateParts();
-  pass('parts.ts integrity — 91 unique ids, declared system counts, unit explode vectors');
+  pass(`parts.ts integrity — ${PARTS.length} unique ids, declared system counts, unit explode vectors`);
 } catch (error) {
   fail(`parts.ts integrity: ${(error as Error).message}`);
 }
@@ -128,7 +128,7 @@ if (drifted.length === 0) {
 /* ------------------------------------- the same sweep, on the real objects */
 
 // The two checks above prove the arithmetic. This one proves what the scene
-// actually holds: 91 real THREE.Group instances, positioned by the same loop
+// actually holds: 93 real THREE.Group instances, positioned by the same loop
 // `ExplodeDriver` runs every frame, dragged through the same sweep, then read back
 // off `group.position`. If `Vector3.set` or the driver's loop lost anything, it
 // shows up here and not in the maths.

@@ -112,12 +112,12 @@ await session(1024, 1366, 'portrait 1024×1366', async (page, label) => {
   if (boot.distinct > 20) ok(`${label}: model renders`, `${boot.distinct} distinct colours, mean luminance ${boot.mean.toFixed(1)}`);
   else bad(`${label}: model renders`, JSON.stringify(boot));
 
-  if (/91 modeled pieces/.test(await page.textContent('header'))) ok('header reports 91 modeled pieces');
-  else bad('header reports 91 modeled pieces');
+  if (/93 modeled pieces/.test(await page.textContent('header'))) ok('header reports 93 modeled pieces');
+  else bad('header reports 93 modeled pieces');
 
   const systems = (await page.textContent('section[aria-label="Systems"]')).replace(/\s+/g, ' ');
-  if (/91 visible/.test(systems)) ok('systems panel reads "91 visible"', systems.slice(0, 90));
-  else bad('systems panel reads "91 visible"', systems.slice(0, 160));
+  if (/93 visible/.test(systems)) ok('systems panel reads "93 visible"', systems.slice(0, 90));
+  else bad('systems panel reads "93 visible"', systems.slice(0, 160));
 
   const small = await page.evaluate(() => {
     const out = [];
@@ -241,7 +241,7 @@ await session(1024, 1366, 'portrait 1024×1366', async (page, label) => {
   await page.waitForTimeout(600);
   const hiddenText = (await page.textContent('section[aria-label="Systems"]')).replace(/\s+/g, ' ');
   await page.screenshot({ path: `${SHOTS}/08-piston-hidden.png` });
-  if (/76 visible/.test(hiddenText)) ok('hiding Piston Assembly takes the count 91 → 76');
+  if (/78 visible/.test(hiddenText)) ok('hiding Piston Assembly takes the count 93 → 78');
   else bad('systems toggle count', hiddenText.slice(0, 120));
   await page.click('section[aria-label="Systems"] >> text=Piston Assembly');
   await page.waitForTimeout(500);
@@ -316,7 +316,7 @@ await session(1024, 1366, 'portrait 1024×1366', async (page, label) => {
   await page.waitForTimeout(1200);
   const reset = (await page.textContent('section[aria-label="Systems"]')).replace(/\s+/g, ' ');
   const resetPct = (await pct()).replace(/\s+/g, ' ').trim();
-  if (/91 visible/.test(reset) && /\b0 %/.test(resetPct)) ok('reset everything restores 91 visible and 0 % explode');
+  if (/93 visible/.test(reset) && /\b0 %/.test(resetPct)) ok('reset everything restores 93 visible and 0 % explode');
   else bad('reset everything', `${reset.slice(0, 60)} | ${resetPct.slice(0, 40)}`);
 
   const stored = await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length, cookie: document.cookie.length, idb: typeof indexedDB }));

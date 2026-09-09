@@ -20,10 +20,10 @@ import { labelNodes, useLabelledParts } from './labelBus';
  *
  * Two costs are deliberately controlled here:
  *
- *   - **One draw call for all 91 leaders.** A single `LineSegments` with a buffer
+ *   - **One draw call for all 93 leaders.** A single `LineSegments` with a buffer
  *     sized for the whole table at mount; each frame rewrites the first `n` pairs
  *     and moves the draw range. No geometry is allocated while the user drags.
- *   - **A screen-space declutter.** 91 chips at 100 % explode overlap into noise,
+ *   - **A screen-space declutter.** 93 chips at 100 % explode overlap into noise,
  *     so the screen is a coarse grid and each chip claims **every cell it actually
  *     spans**, measured from the rendered node rather than assumed. Chips vary from
  *     "Flag" to "Customer Connection Box (terminals 12–17)"; claiming one cell each
@@ -78,7 +78,7 @@ export default function Labels() {
   const order = useRef<{ part: Part; depth: number }[]>([]);
   // Chip text never changes, so its box is measured once per node. Reading
   // offsetWidth inside the write loop every frame would force a layout flush on
-  // each of the 91 chips.
+  // each of the 93 chips.
   const boxes = useMemo(() => new Map<string, { w: number; h: number }>(), []);
 
   // A new label set means new nodes; the measured boxes belong to the old ones.

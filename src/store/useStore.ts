@@ -12,7 +12,7 @@ import type { ThemeId } from '../data/theme';
  *
  * Two shapes here are deliberate and worth keeping:
  *
- *   - **`hiddenSystems` is an array, not a Set.** ~91 mesh components subscribe to
+ *   - **`hiddenSystems` is an array, not a Set.** ~93 mesh components subscribe to
  *     this store, and zustand compares selector results by identity. A Set mutated
  *     in place never looks changed; a new array on every toggle always does.
  *   - **Camera moves are requests, not state.** A component inside the Canvas owns

@@ -7,18 +7,18 @@ unsure where you are, re-read `SPEC.md` §11 and check the phase tracker below.
 ## What this project is
 
 An interactive 3D **anatomy** of a Honeywell Enraf / Calibron Small Volume Prover, in the style of
-the Human Atlas. The user orbits the machine, taps any of ~91 components to learn what it is,
+the Human Atlas. The user orbits the machine, taps any of ~93 components to learn what it is,
 explodes the whole assembly apart, and watches the internal mechanism operate.
 
 ## Priority order — cut from the bottom, never the top
 
-1. **The parts.** ~91 selectable components with real OEM item numbers.
+1. **The parts.** ~93 selectable components with real OEM item numbers.
 2. **Exploration.** Explode, isolate, hide-by-system, search.
 3. **Content.** Bilingual function + failure mode for every part.
 4. **Mechanism animation.** Piston, poppet, guide block, flag, chains, fluid.
 5. **Numeric readout.** Small card. Build last. Never let it delay 1–4.
 
-An atlas with 91 labelled parts and no calculation engine is a success.
+An atlas with 93 labelled parts and no calculation engine is a success.
 A calculation engine with 20 parts is a failure.
 
 ## Non-negotiable rules
@@ -26,7 +26,7 @@ A calculation engine with 20 parts is a failure.
 1. **No 3D asset files.** No `.glb` / `.gltf` / `.obj` / `.fbx`, no Blender, no downloaded models.
    All geometry is procedural.
 2. **No browser storage.** No `localStorage`, `sessionStorage`, `IndexedDB`, cookies.
-3. **Primitive-driven.** ~10 primitive builders + one data table of ~91 rows. Never one component
+3. **Primitive-driven.** ~10 primitive builders + one data table of ~93 rows. Never one component
    per part. If you are writing `Poppet.tsx`, stop — it should be a row in `parts.ts`.
 4. **Part IDs are frozen** once written.
 5. **All dimensions in millimetres** in `src/data/`. Convert once at the render boundary with
@@ -34,6 +34,17 @@ A calculation engine with 20 parts is a failure.
 6. **Touch-first.** Target device is an iPad Pro. Orbit, pinch-zoom and tap-select must work with
    touch. Hit targets ≥ 44 px. Verify at 1024×1366 and 1366×1024.
 7. **No corrections engine, no Water Draw module.** Out of scope for this build.
+
+## Two things the model got wrong, now corrected — do not reintroduce them
+
+1. **The fluid does not enter or leave along the axis.** Both ends of the flow tube are closed
+   around the piston's two shafts, and the published envelope has no room above or beside the
+   tube. Inlet and outlet are **radial nozzles hanging under the body**, and the fluid runs the
+   bore **through the open Poppet inside the Piston**. SPEC.md §4.8.
+2. **The drive never latches the piston.** It holds the **poppet actuator shaft** — the Upstream
+   Shaft `54004`. Pulling it upstream drags the piston back *and holds the Poppet open*.
+   `LAUNCH` is the **Puller releasing that shaft**: the Piston Spring shuts the Poppet and the
+   flow, not the drive, carries the piston downstream. SPEC.md §5 system 7 and §8.
 
 ## The one insight the app must teach
 
@@ -73,11 +84,13 @@ iPad; asking for approval on each file write would make the build impossible to 
 ## Phase tracker — update this line as you go
 
 ```
-CURRENT PHASE: D (complete — PR open toward main, awaiting approval).
-C merged into main in f93c11c (PR #3). E not started.
+CURRENT PHASE: D merged into main (PR #4, 86ccb82). E not started.
+Interleaved: claude/fix-geometry — a research-and-correction pass on the flow path and the
+piston return mechanism, after the project owner (who has inspected the machine) reported
+both were wrong. Part count 91 → 93. See SPEC.md §4.8 and §14.
 ```
 
-A skeleton · B primitives · C atlas (~91 parts) · D interaction · E content · F mechanism ·
+A skeleton · B primitives · C atlas (~93 parts) · D interaction · E content · F mechanism ·
 G readout. Do not start a phase before the previous one is verified. **Phase C is the milestone
 that matters most.**
 

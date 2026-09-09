@@ -23,7 +23,7 @@ import { PRIMITIVES } from './primitives';
  *
  * **Why explode is driven imperatively.** Everything else here changes when the
  * user taps something, so it goes through React. Explode changes on every frame of
- * a drag, and re-rendering 91 components per frame is how a 60 fps target on an
+ * a drag, and re-rendering 93 components per frame is how a 60 fps target on an
  * iPad (SPEC.md §10) turns into a 20 fps one. So each row's outer group is
  * positioned by `ExplodeDriver` in a single `useFrame`, and React never sees the
  * slider move. That also happens to be what makes the round trip exact: the driver
