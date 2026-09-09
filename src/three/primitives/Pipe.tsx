@@ -34,6 +34,7 @@ export default function Pipe({
   opacity = 1,
   emissive,
   emissiveIntensity,
+  clip = false,
   visible = true,
   onClick,
   onPointerOver,
@@ -54,6 +55,7 @@ export default function Pipe({
     opacity,
     emissive,
     emissiveIntensity,
+    clip,
     side: THREE.DoubleSide,
   });
 

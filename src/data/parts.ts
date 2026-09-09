@@ -1337,6 +1337,52 @@ function axisCentre(part: Part): [number, number, number] {
   return [x, y, z];
 }
 
+/** How far a repeated set reaches beyond its own row position, per axis, mm. */
+function instanceSpread(part: Part): [number, number, number] {
+  const spread: [number, number, number] = [0, 0, 0];
+  if (!part.instance) return spread;
+
+  const n = (part.qty ?? 1) - 1;
+  const axis = { x: 0, y: 1, z: 2 }[part.instance.axis ?? 'x'];
+  if (part.instance.pattern === 'linear') {
+    spread[axis] = (n * (part.instance.spacing ?? 0)) / 2;
+  } else {
+    const radius = part.instance.radius ?? 0;
+    for (const a of [0, 1, 2] as const) if (a !== axis) spread[a] = radius;
+  }
+  return spread;
+}
+
+/** A box in millimetres: where a thing sits and how far it reaches on each axis. */
+export interface Bounds {
+  centre: [number, number, number];
+  halfWidth: number;
+  halfHeight: number;
+  halfDepth: number;
+}
+
+/**
+ * The bounding box of a single row, in millimetres — the same per-axis reasoning
+ * `ASSEMBLY_BOUNDS` uses, applied to one part.
+ *
+ * Phase D needs this for "Isolate part → camera frames it" and for the search
+ * result that frames its hit (SPEC.md §7): both hand this box to
+ * `three/framing.ts`, which solves the distance for the current viewport. A part
+ * can be arbitrarily small — a 10 mm o-ring cord — so the box is floored before it
+ * is framed, or the camera would end up inside the geometry.
+ */
+export function partBounds(part: Part): Bounds {
+  const centre = axisCentre(part);
+  const extent = axisExtents(part);
+  const spread = instanceSpread(part);
+  return {
+    centre,
+    halfWidth: extent[0] + spread[0],
+    halfHeight: extent[1] + spread[1],
+    halfDepth: extent[2] + spread[2],
+  };
+}
+
 function computeBounds() {
   const min: [number, number, number] = [Infinity, Infinity, Infinity];
   const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
@@ -1344,19 +1390,7 @@ function computeBounds() {
   for (const part of PARTS) {
     const centre = axisCentre(part);
     const extent = axisExtents(part);
-    // A repeated set reaches beyond its own row position.
-    const spread: [number, number, number] = [0, 0, 0];
-    if (part.instance) {
-      const n = (part.qty ?? 1) - 1;
-      if (part.instance.pattern === 'linear') {
-        const axis = { x: 0, y: 1, z: 2 }[part.instance.axis ?? 'x'];
-        spread[axis] = (n * (part.instance.spacing ?? 0)) / 2;
-      } else {
-        const radius = part.instance.radius ?? 0;
-        const axis = { x: 0, y: 1, z: 2 }[part.instance.axis ?? 'x'];
-        for (const a of [0, 1, 2] as const) if (a !== axis) spread[a] = radius;
-      }
-    }
+    const spread = instanceSpread(part);
 
     for (const a of [0, 1, 2] as const) {
       const pad = extent[a] + spread[a];
@@ -1380,11 +1414,26 @@ function computeBounds() {
 export const ASSEMBLY_BOUNDS = computeBounds();
 
 /**
- * Integrity of the table itself. Part ids are frozen and must be unique, and the
- * per-system counts are declared in SPEC.md §5 — a row lost to a bad merge is the
- * kind of thing that goes unnoticed for a week, so it fails loudly in development.
+ * Which rows the Cutaway opens — SPEC.md §7: "Clips the near half of the flow tube
+ * so the piston is visible inside."
+ *
+ * Scoped to the Flow Tube alone, deliberately. Clipping the whole scene against one
+ * world plane would take the near half of the Piston with it, and the Piston is the
+ * thing the Cutaway exists to reveal. Every other part stays whole, so the cut reads
+ * as a window into the bore rather than as half a machine.
  */
-if (import.meta.env.DEV) {
+export const CUTAWAY_PART_IDS: readonly string[] = ['SVP-BOD-FT01'];
+
+export const isCutawayPart = (id: string): boolean => CUTAWAY_PART_IDS.includes(id);
+
+/**
+ * Integrity of the table itself. Part ids are frozen and must be unique, the
+ * per-system counts are declared in SPEC.md §5, and every derived explode vector
+ * must be a unit vector or the explode distance stops meaning millimetres. A row
+ * lost to a bad merge is the kind of thing that goes unnoticed for a week, so this
+ * runs on every dev boot and fails loudly.
+ */
+export function validateParts(): void {
   const ids = new Set<string>();
   for (const part of PARTS) {
     if (ids.has(part.id)) throw new Error(`parts.ts: duplicate part id ${part.id}`);
@@ -1401,4 +1450,16 @@ if (import.meta.env.DEV) {
       );
     }
   }
+  for (const part of PARTS) {
+    const [dx, dy, dz] = part.explodeDir;
+    const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (Math.abs(length - 1) > 1e-9) {
+      throw new Error(`parts.ts: ${part.id} explodeDir is not a unit vector (|d| = ${length})`);
+    }
+  }
 }
+
+// `import.meta.env` is a Vite injection and is absent under plain node, which is
+// how `scripts/verify-explode.ts` loads this table. The optional chain lets the
+// script import the rows and call `validateParts()` itself.
+if (import.meta.env?.DEV) validateParts();

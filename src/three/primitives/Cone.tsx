@@ -29,6 +29,7 @@ export default function Cone({
   opacity = 1,
   emissive,
   emissiveIntensity,
+  clip = false,
   visible = true,
   onClick,
   onPointerOver,
@@ -46,6 +47,7 @@ export default function Cone({
     opacity,
     emissive,
     emissiveIntensity,
+    clip,
   });
 
   // Closed at both ends: a Poppet is solid, and an open base would show through

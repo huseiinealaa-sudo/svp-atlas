@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 
+import { CUTAWAY_PLANES } from '../clipping';
+
 /**
  * SPEC.md §10 — "Share materials across parts of the same colour."
  *
@@ -10,7 +12,13 @@ import * as THREE from 'three';
  * state changes instead of rebinding a new program for each part.
  *
  * The cache is module-level and intentionally never cleared: the set of distinct
- * (colour, finish, opacity, highlight) combinations is bounded by the palette.
+ * (colour, finish, opacity, highlight, clip) combinations is bounded by the palette.
+ *
+ * `clip` is a boolean rather than the plane array itself so the key stays a string.
+ * There is exactly one cutaway plane set in the application (`three/clipping.ts`),
+ * and materials are shared — mutating `clippingPlanes` on a cached instance would
+ * cut every other part painted the same colour, so the clipped variant has to be a
+ * separate cache entry.
  */
 export interface MaterialRequest {
   color: string;
@@ -21,6 +29,8 @@ export interface MaterialRequest {
   emissive?: string;
   emissiveIntensity?: number;
   side?: THREE.Side;
+  /** Apply the cutaway clipping planes — SPEC.md §7. */
+  clip?: boolean;
 }
 
 const cache = new Map<string, THREE.MeshStandardMaterial>();
@@ -34,9 +44,10 @@ export function getMaterial(request: MaterialRequest): THREE.MeshStandardMateria
     emissive = '#000000',
     emissiveIntensity = 0,
     side = THREE.FrontSide,
+    clip = false,
   } = request;
 
-  const key = `${color}|${metalness}|${roughness}|${opacity}|${emissive}|${emissiveIntensity}|${side}`;
+  const key = `${color}|${metalness}|${roughness}|${opacity}|${emissive}|${emissiveIntensity}|${side}|${clip}`;
   const hit = cache.get(key);
   if (hit) return hit;
 
@@ -51,6 +62,10 @@ export function getMaterial(request: MaterialRequest): THREE.MeshStandardMateria
     side,
     // Isolate mode fades parts to 0.05; without this they punch holes in each other.
     depthWrite: opacity >= 1,
+    clippingPlanes: clip ? CUTAWAY_PLANES : undefined,
+    // The cut edge has to fall out of the shadow too, or the flow tube keeps
+    // casting a whole shadow of a half that is no longer there.
+    clipShadows: clip,
   });
   cache.set(key, material);
   return material;
@@ -66,10 +81,21 @@ export function useMaterial(request: MaterialRequest): THREE.MeshStandardMateria
     emissive,
     emissiveIntensity,
     side,
+    clip,
   } = request;
   return useMemo(
-    () => getMaterial({ color, metalness, roughness, opacity, emissive, emissiveIntensity, side }),
-    [color, metalness, roughness, opacity, emissive, emissiveIntensity, side],
+    () =>
+      getMaterial({
+        color,
+        metalness,
+        roughness,
+        opacity,
+        emissive,
+        emissiveIntensity,
+        side,
+        clip,
+      }),
+    [color, metalness, roughness, opacity, emissive, emissiveIntensity, side, clip],
   );
 }
 
