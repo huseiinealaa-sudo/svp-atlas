@@ -81,7 +81,7 @@ export default function Scene() {
         />
         <directionalLight position={LIGHTING.fillPosition} intensity={LIGHTING.fillIntensity} />
 
-        {/* SPEC.md §4.1 — 91 rows of data/parts.ts, drawn by the ten primitives. */}
+        {/* SPEC.md §4.1 — 93 rows of data/parts.ts, drawn by the ten primitives. */}
         <Assembly />
 
         {/* SPEC.md §7 — leader lines, above 5 % explode. */}

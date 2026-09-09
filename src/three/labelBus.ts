@@ -10,7 +10,7 @@ import { LABEL_THRESHOLD } from './explode';
  * lines to floating labels showing OEM number + English name."
  *
  * Why a module-level registry rather than React state: a label has to follow its
- * part through every orbit frame, and pushing 91 screen positions through React
+ * part through every orbit frame, and pushing 93 screen positions through React
  * sixty times a second would cost more than the entire rest of the scene. So the
  * chips are *rendered* by React — rarely, only when the set of labelled parts
  * changes — and *moved* by `Labels.tsx` writing straight to the nodes it finds

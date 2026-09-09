@@ -1,5 +1,5 @@
 /**
- * THE PART TABLE — SPEC.md §5. 91 rows, enumerated by name in the spec.
+ * THE PART TABLE — SPEC.md §5. 93 rows, enumerated by name in the spec.
  *
  * This file is the product. Everything else in `src/three/` is a way of drawing it:
  * `Assembly.tsx` maps over `PARTS` and hands each row to one of the ten primitive
@@ -28,7 +28,7 @@
  * local frame. If a row carries a `rotation`, pick the local axis that lands on the
  * world axis you want.
  */
-import { AXIAL, EST, FLOW_TUBE, OVERALL } from './geometry';
+import { AXIAL, EST, FLOW_TUBE, OVERALL, PORTS, PORT_FLANGE_Y } from './geometry';
 import { PALETTE } from './theme';
 import type { InstanceSpec, PrimitiveId } from '../three/primitives/types';
 
@@ -63,9 +63,9 @@ export const SYSTEMS: System[] = [
   { id: 'downstream', nameEn: 'Downstream Stop & Seal Retainer', color: PALETTE.switchBar, declared: 12 },
   { id: 'guideblock', nameEn: 'Guide Block & Flag', color: PALETTE.guideBlock, declared: 12 },
   { id: 'detection', nameEn: 'Detection', color: PALETTE.detector, declared: 5 },
-  { id: 'drive', nameEn: 'Return Drive', color: PALETTE.drive, declared: 8 },
+  { id: 'drive', nameEn: 'Return Drive', color: PALETTE.drive, declared: 10 },
   { id: 'instruments', nameEn: 'Instrumentation', color: PALETTE.instruments, declared: 7 },
-  { id: 'piping', nameEn: 'Process Piping', color: PALETTE.piping, declared: 6 },
+  { id: 'piping', nameEn: 'Process Connections', color: PALETTE.piping, declared: 6 },
   { id: 'structure', nameEn: 'Structure', color: PALETTE.structure, declared: 5 },
 ];
 
@@ -130,12 +130,12 @@ const PISTON_X = 0;
 /** Planes at −Z, from the [EST] figures in SPEC.md §4.7. */
 const SWITCHBAR_Z = EST.switchBarZ; // −520, the switch bar and both detectors
 const GUIDE_Z = EST.driveZ; // −600, the guide block and its bearing guide bars
-const CHAIN_Z = EST.chainZ; // −640, the return drive
+const CHAIN_Z = EST.chainZ; // −580, the return drive, inside the 1270 overall width
 const DRIVE_Y = -300; // the drive runs below the switch bar, clear of the guide block
 
 const HALF_PI = Math.PI / 2;
 
-/* --------------------------------------------------------------- the 91 rows */
+/* --------------------------------------------------------------- the 93 rows */
 
 const SPECS: PartSpec[] = [
   /* ---- System 1 · flowtube — Flow Tube & Body (6) ------------------------ */
@@ -248,10 +248,15 @@ const SPECS: PartSpec[] = [
   {
     id: 'SVP-PIS-54004',
     oem: '54004',
-    nameEn: 'Upstream Shaft',
+    nameEn: 'Upstream Shaft (Poppet Actuator Shaft)',
     system: 'piston',
     primitive: 'rod',
-    // Carries the Guide Block, and therefore the Flag, out through the upstream end.
+    // Carries the Guide Block, and therefore the Flag, out through the upstream end
+    // — and it is also the **poppet actuator shaft**. That double duty is the heart
+    // of the machine: the Puller pulls on this shaft, and pulling it upstream both
+    // drags the piston back and holds the Poppet open. Let go of it and the Poppet
+    // closes. The manual names it as the fail-safe part — if it "becomes
+    // disconnected or otherwise fails" the Poppet stays open and the line flows on.
     params: { diameter: EST.shaftDia, length: EST.shaftLen },
     position: [PISTON_X - (EST.pistonBodyLen / 2 + EST.shaftLen / 2), 0, 0],
     color: STEEL,
@@ -292,7 +297,9 @@ const SPECS: PartSpec[] = [
     nameEn: 'Piston Spring',
     system: 'piston',
     primitive: 'helix',
-    // Holds the Poppet closed once the piston launches (SPEC.md §8, LAUNCH).
+    // Shuts the Poppet the instant the Puller releases the actuator shaft, and holds
+    // it shut for the whole measuring stroke (SPEC.md §8, LAUNCH). Nothing else
+    // closes the Poppet — the drive only ever *holds it open*.
     params: { diameter: 200, wireDiameter: 16, length: 180, turns: 7 },
     position: [PISTON_X - 60, 0, 0],
     color: STEEL,
@@ -871,11 +878,26 @@ const SPECS: PartSpec[] = [
     color: DET,
   },
 
-  /* ---- System 7 · drive — Return Drive (8) ------------------------------- */
+  /* ---- System 7 · drive — Return Drive (10) ------------------------------
+     What this drive actually holds is the **poppet valve actuator shaft**, and
+     that is the whole point of it. The Puller, carried on the chains, takes the
+     Guide Block and walks the piston upstream; because it is pulling on the
+     actuator shaft, the same pull holds the Poppet **open**, so the return barely
+     disturbs the line. At the upstream end the Puller lets go, the Piston Spring
+     shuts the Poppet, and the flow itself launches the piston.
+
+       "When upstream position has been reached, the poppet valve actuator shaft is
+        released by the return mechanism, allowing the poppet valve to close and the
+        flowing fluid to move the piston through the measurement cylinder."
+       — Honeywell Enraf SVP Installation, Operation & Service Manual, models 035–120
+
+     The piston is never latched to the chain and never unlatched from it. If the
+     actuator shaft fails or comes adrift the Poppet simply stays open and the line
+     keeps flowing — that is the fail-safe the manual advertises. */
   {
     id: 'SVP-DRV-MOT',
     oem: null,
-    nameEn: 'Return Drive Motor',
+    nameEn: 'Return Drive Motor (Explosion-Proof)',
     system: 'drive',
     primitive: 'disc',
     params: { diameter: EST.motorDia, thickness: EST.motorLen },
@@ -900,7 +922,7 @@ const SPECS: PartSpec[] = [
     // A closed racetrack around the two sprockets — `loop`, not a swept run.
     primitive: 'pipe',
     params: { bore: 0, wall: 18, length: 2400, rise: 160, loop: 1, segments: 72 },
-    position: [-100, DRIVE_Y, CHAIN_Z - 60],
+    position: [-100, DRIVE_Y, CHAIN_Z - EST.chainSpacing / 2],
     color: STEEL,
   },
   {
@@ -910,7 +932,39 @@ const SPECS: PartSpec[] = [
     system: 'drive',
     primitive: 'pipe',
     params: { bore: 0, wall: 18, length: 2400, rise: 160, loop: 1, segments: 72 },
-    position: [-100, DRIVE_Y, CHAIN_Z + 60],
+    position: [-100, DRIVE_Y, CHAIN_Z + EST.chainSpacing / 2],
+    color: STEEL,
+  },
+  {
+    id: 'SVP-DRV-PUL',
+    oem: null,
+    nameEn: 'Puller Assembly',
+    system: 'drive',
+    // The missing link. The service manual for the 35 / 85 / 120 lists the puller
+    // assembly as one of the machine's major components, and without it nothing in
+    // the model connects the drive to the piston. It is carried on the chains and
+    // stands up to meet the Guide Block: "The puller is placed on the front side of
+    // the guide block and can be used with a wrench on the drive sprocket to push
+    // the piston downstream." On the S85 and S120 the puller carries cam followers
+    // of its own; on the S35 it does not.
+    primitive: 'box',
+    params: { width: 90, height: 340, depth: 200 },
+    position: [PISTON_X - (EST.guideBlockW / 2 + 45), DRIVE_Y / 2, CHAIN_Z],
+    color: GUIDE,
+  },
+  {
+    id: 'SVP-DRV-SHF',
+    oem: null,
+    nameEn: 'Drive Shaft',
+    system: 'drive',
+    // Across the machine, carrying both chain sprockets, driven by the gearbox.
+    // Also a named major component, and the reason the two chains stay in step:
+    // "the spacing of the sprockets and guide rail bearings is a fixed distance
+    // determined by the shaft and based on the size of the puller."
+    primitive: 'rod',
+    params: { diameter: 44, length: EST.chainSpacing + 180 },
+    position: [-1300, DRIVE_Y, CHAIN_Z],
+    rotation: [0, HALF_PI, 0],
     color: STEEL,
   },
   {
@@ -1034,27 +1088,46 @@ const SPECS: PartSpec[] = [
     color: INS,
   },
 
-  /* ---- System 9 · piping — Process Piping (6) ---------------------------- */
+  /* ---- System 9 · piping — Process Connections (6) -----------------------
+     Radial nozzles on the **underside** of the body, not axial runs into the ends
+     of the flow tube. Both ends of the tube are closed around the piston's two
+     shafts, and the published envelope leaves no room above or beside the tube —
+     see the `PORTS` block in `geometry.ts` for the full argument and the sources.
+     Fluid enters below the upstream end, runs the length of the bore **through the
+     open Poppet inside the Piston**, and leaves below the downstream end. */
   {
     id: 'SVP-PIP-IN',
     oem: null,
-    nameEn: 'Inlet Piping (10" 600#)',
+    nameEn: 'Inlet Nozzle (10" 600#)',
     system: 'piping',
-    // Rises from skid level into the flank of the upstream flange, clear of the
-    // shaft that runs out along the axis.
-    primitive: 'pipe',
-    params: { bore: EST.pipeBore, wall: EST.pipeWall, length: 1300, rise: 400, segments: 48 },
-    position: [-2300, -750, 0],
+    // `tube`, rotated so its build axis (+X) stands on +Y: a vertical nozzle
+    // hanging under the body. Its top sits inside the tube wall so the joint reads
+    // as welded on rather than as a pipe resting against a cylinder.
+    primitive: 'tube',
+    params: {
+      outerDiameter: PORTS.bore + 2 * PORTS.wall,
+      innerDiameter: PORTS.bore,
+      length: PORTS.nozzleLength,
+    },
+    position: [PORTS.inletX, PORTS.topY - PORTS.nozzleLength / 2, 0],
+    rotation: [0, 0, HALF_PI],
     color: PIP,
   },
   {
     id: 'SVP-PIP-OUT',
     oem: null,
-    nameEn: 'Outlet Piping (10" 600#)',
+    nameEn: 'Outlet Nozzle (10" 600#)',
     system: 'piping',
-    primitive: 'pipe',
-    params: { bore: EST.pipeBore, wall: EST.pipeWall, length: 1300, rise: -400, segments: 48 },
-    position: [1000, -350, 0],
+    // Welded at the bottom on purpose: solids that settle out of the stream leave
+    // with the flow instead of collecting in the bore (US 8,950,235 B2).
+    primitive: 'tube',
+    params: {
+      outerDiameter: PORTS.bore + 2 * PORTS.wall,
+      innerDiameter: PORTS.bore,
+      length: PORTS.nozzleLength,
+    },
+    position: [PORTS.outletX, PORTS.topY - PORTS.nozzleLength / 2, 0],
+    rotation: [0, 0, HALF_PI],
     color: PIP,
   },
   {
@@ -1063,8 +1136,9 @@ const SPECS: PartSpec[] = [
     nameEn: 'Inlet Flange',
     system: 'piping',
     primitive: 'disc',
-    params: { diameter: 508, thickness: 60, boreDiameter: EST.pipeBore },
-    position: [-2330, -750, 0],
+    params: { diameter: PORTS.flangeOD, thickness: PORTS.flangeThk, boreDiameter: PORTS.bore },
+    position: [PORTS.inletX, PORT_FLANGE_Y, 0],
+    rotation: [0, 0, HALF_PI],
     color: PIP,
   },
   {
@@ -1073,8 +1147,9 @@ const SPECS: PartSpec[] = [
     nameEn: 'Outlet Flange',
     system: 'piping',
     primitive: 'disc',
-    params: { diameter: 508, thickness: 60, boreDiameter: EST.pipeBore },
-    position: [2330, -750, 0],
+    params: { diameter: PORTS.flangeOD, thickness: PORTS.flangeThk, boreDiameter: PORTS.bore },
+    position: [PORTS.outletX, PORT_FLANGE_Y, 0],
+    rotation: [0, 0, HALF_PI],
     color: PIP,
   },
   {
@@ -1174,10 +1249,10 @@ const SPECS: PartSpec[] = [
 /* ------------------------------------------------------------ explode vectors */
 
 /**
- * SPEC.md §5 — "Derive them systematically, do not hand-author 91 vectors."
+ * SPEC.md §5 — "Derive them systematically, do not hand-author 93 vectors."
  *
  * Direction, in the order the spec states the rules:
- *   piping                       → ±X, furthest of all
+ *   process connections          → radially outward, furthest of all
  *   base skid and structure      → −Y
  *   guide block, drive, detection → −Z, away from the flow tube
  *   seals, rings and washers     → radially outward in the YZ plane, at their own X
@@ -1222,7 +1297,12 @@ function deriveExplode(spec: PartSpec): Pick<Part, 'explodeDir' | 'explodeDist'>
   const dist = BASE_DIST + depth * DEPTH_STEP;
 
   if (spec.system === 'piping') {
-    return { explodeDir: [x >= 0 ? 1 : -1, 0, 0], explodeDist: 1600 };
+    // The connections are radial, so they peel off radially: the inlet and outlet
+    // nozzles drop away under the body, the Vent Valve lifts off the top. Sending
+    // them along ±X, as this did while they were drawn as axial runs, would now
+    // slide them along the machine instead of off it. They travel furthest, and far
+    // enough to clear the skid on its own way down.
+    return { explodeDir: normalise([0, y, z]), explodeDist: 1300 };
   }
   if (spec.system === 'structure') {
     return { explodeDir: [0, -1, 0], explodeDist: 700 };
@@ -1247,7 +1327,7 @@ function deriveExplode(spec: PartSpec): Pick<Part, 'explodeDir' | 'explodeDist'>
 
 /* -------------------------------------------------------------------- output */
 
-/** THE PART TABLE. 91 rows, explode vectors derived and normalised at load. */
+/** THE PART TABLE. 93 rows, explode vectors derived and normalised at load. */
 export const PARTS: Part[] = SPECS.map((spec) => ({ ...spec, ...deriveExplode(spec) }));
 
 /** Shown in the header, Human Atlas style (SPEC.md §5). */
@@ -1439,8 +1519,8 @@ export function validateParts(): void {
     if (ids.has(part.id)) throw new Error(`parts.ts: duplicate part id ${part.id}`);
     ids.add(part.id);
   }
-  if (PARTS.length !== 91) {
-    throw new Error(`parts.ts: SPEC.md §5 enumerates 91 rows, found ${PARTS.length}`);
+  if (PARTS.length !== 93) {
+    throw new Error(`parts.ts: SPEC.md §5 enumerates 93 rows, found ${PARTS.length}`);
   }
   for (const system of SYSTEMS) {
     const actual = countBySystem(system.id);

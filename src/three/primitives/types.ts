@@ -40,7 +40,7 @@ export interface InstanceSpec {
 
 /**
  * The props every primitive accepts. `Assembly.tsx` (Phase C) spreads a part row
- * straight into these; nothing else is needed to draw any of the ~91 parts.
+ * straight into these; nothing else is needed to draw any of the ~93 parts.
  */
 export interface PrimitiveProps {
   /** Primitive-specific dimensions, in millimetres. See each builder for its keys. */

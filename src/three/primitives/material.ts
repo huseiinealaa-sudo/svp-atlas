@@ -6,7 +6,7 @@ import { CUTAWAY_PLANES } from '../clipping';
 /**
  * SPEC.md §10 — "Share materials across parts of the same colour."
  *
- * With ~91 parts on an iPad Pro at 60 fps we cannot afford a fresh
+ * With ~93 parts on an iPad Pro at 60 fps we cannot afford a fresh
  * `MeshStandardMaterial` per mesh. Every primitive asks for its material here and
  * identical requests get the identical instance back, so the renderer batches
  * state changes instead of rebinding a new program for each part.
