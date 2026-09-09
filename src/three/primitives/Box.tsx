@@ -26,6 +26,7 @@ export default function Box({
   opacity = 1,
   emissive,
   emissiveIntensity,
+  clip = false,
   visible = true,
   onClick,
   onPointerOver,
@@ -42,6 +43,7 @@ export default function Box({
     opacity,
     emissive,
     emissiveIntensity,
+    clip,
   });
 
   const geometry = useMemo(

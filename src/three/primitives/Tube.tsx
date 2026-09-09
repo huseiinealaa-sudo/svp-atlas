@@ -26,6 +26,7 @@ export default function Tube({
   opacity = 1,
   emissive,
   emissiveIntensity,
+  clip = false,
   visible = true,
   onClick,
   onPointerOver,
@@ -45,6 +46,7 @@ export default function Tube({
     opacity,
     emissive,
     emissiveIntensity,
+    clip,
     side: THREE.DoubleSide,
   });
 

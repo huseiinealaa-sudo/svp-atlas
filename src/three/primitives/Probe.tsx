@@ -33,6 +33,7 @@ export default function Probe({
   opacity = 1,
   emissive,
   emissiveIntensity,
+  clip = false,
   visible = true,
   onClick,
   onPointerOver,
@@ -51,6 +52,7 @@ export default function Probe({
     opacity,
     emissive,
     emissiveIntensity,
+    clip,
   });
 
   const body = useMemo(

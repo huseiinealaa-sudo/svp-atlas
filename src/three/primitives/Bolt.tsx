@@ -32,6 +32,7 @@ export default function Bolt({
   opacity = 1,
   emissive,
   emissiveIntensity,
+  clip = false,
   visible = true,
   onClick,
   onPointerOver,
@@ -50,6 +51,7 @@ export default function Bolt({
     opacity,
     emissive,
     emissiveIntensity,
+    clip,
   });
 
   // Both geometries are pre-rotated onto +X and pre-translated, so the instance

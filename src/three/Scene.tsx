@@ -4,62 +4,45 @@ import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
-import { CAMERA_HOME, LIGHTING, PALETTE } from '../data/theme';
-import { OVERALL, EST, mm, mmVec } from '../data/geometry';
+import { AMBIENT_BY_THEME, CAMERA_HOME, LIGHTING, SURFACE } from '../data/theme';
+import { OVERALL, EST, mm } from '../data/geometry';
 import { useStore } from '../store/useStore';
 import Assembly from './Assembly';
-import { ASSEMBLY_BOUNDS } from '../data/parts';
-import { framePosition, type Box } from './framing';
+import CameraDirector from './CameraDirector';
+import Labels from './Labels';
 
 /**
- * Returns the camera to its home *angle* and re-solves the distance for the current
- * viewport, on mount, on every reset, and on rotation between the two iPad
- * orientations (SPEC.md §1.6).
+ * Canvas, lights, camera — SPEC.md §3.
+ *
+ * Phase D adds three things to the Phase A skeleton: the camera is driven by
+ * `CameraDirector` rather than by a single reset effect, local clipping is enabled
+ * for the Cutaway, and the background follows the dark / light setting.
  */
-function CameraHome({
-  controls,
-  box,
-  target,
-}: {
-  controls: React.RefObject<OrbitControlsImpl>;
-  box: Box;
-  /** Scene units. The machine's centre, not the world origin: the skid sits 0.9 m
-   *  below the bore and the piping runs 2.3 m each way, so framing about [0,0,0]
-   *  would hang the model off the bottom of the screen. */
-  target: [number, number, number];
-}) {
-  const token = useStore((s) => s.cameraResetToken);
-  const camera = useThree((s) => s.camera);
-  const width = useThree((s) => s.size.width);
-  const height = useThree((s) => s.size.height);
-  const { halfWidth, halfHeight, halfDepth } = box;
-  const [tx, ty, tz] = target;
+
+/**
+ * The ground the machine is seen against. Kept as its own component so a theme
+ * change repaints the clear colour without remounting the Canvas — remounting
+ * would throw away the WebGL context and every cached material with it.
+ */
+function Surface() {
+  const theme = useStore((s) => s.theme);
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
 
   useEffect(() => {
-    if (height === 0) return;
-    const centre: [number, number, number] = [tx, ty, tz];
-    const position = framePosition(
-      CAMERA_HOME.position,
-      centre,
-      { halfWidth, halfHeight, halfDepth },
-      CAMERA_HOME.fov,
-      width / height,
-    );
-    camera.position.copy(position);
-    const c = controls.current;
-    if (c) {
-      c.target.set(tx, ty, tz);
-      c.update();
-    } else {
-      camera.lookAt(tx, ty, tz);
-    }
-  }, [token, camera, controls, width, height, halfWidth, halfHeight, halfDepth, tx, ty, tz]);
+    const { background } = SURFACE[theme];
+    gl.setClearColor(background);
+    scene.background = new THREE.Color(background);
+  }, [theme, gl, scene]);
 
   return null;
 }
 
 export default function Scene() {
   const controls = useRef<OrbitControlsImpl>(null);
+  const theme = useStore((s) => s.theme);
+  const select = useStore((s) => s.select);
+  const surface = SURFACE[theme];
 
   return (
     <Canvas
@@ -68,15 +51,22 @@ export default function Scene() {
       camera={{ position: CAMERA_HOME.position, fov: CAMERA_HOME.fov, near: 0.05, far: 200 }}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       onCreated={({ gl, scene }) => {
-        gl.setClearColor(PALETTE.background);
-        scene.background = new THREE.Color(PALETTE.background);
+        gl.setClearColor(SURFACE.dark.background);
+        scene.background = new THREE.Color(SURFACE.dark.background);
+        // Per-material clipping, for the Cutaway. Renderer-wide clipping planes
+        // would cut the Piston in half along with the Flow Tube — see
+        // `three/clipping.ts`.
+        gl.localClippingEnabled = true;
       }}
+      // Tapping the background clears the selection, the way closing a card would.
+      onPointerMissed={() => select(null)}
       // The canvas owns every touch gesture on it; the page never scrolls or
       // rubber-bands underneath the model. SPEC.md §1.6 — touch-first.
       style={{ touchAction: 'none' }}
     >
       <Suspense fallback={null}>
-        <ambientLight intensity={LIGHTING.ambientIntensity} />
+        <Surface />
+        <ambientLight intensity={AMBIENT_BY_THEME[theme] ?? LIGHTING.ambientIntensity} />
         <directionalLight
           position={LIGHTING.keyPosition}
           intensity={LIGHTING.keyIntensity}
@@ -94,11 +84,13 @@ export default function Scene() {
         {/* SPEC.md §4.1 — 91 rows of data/parts.ts, drawn by the ten primitives. */}
         <Assembly />
 
-        {/* Ground reference, so orbiting reads as orbiting. */}
+        {/* SPEC.md §7 — leader lines, above 5 % explode. */}
+        <Labels />
+
         {/* Ground plane at the underside of the base skid, so orbiting reads as
             orbiting and the machine reads as standing on something. */}
         <gridHelper
-          args={[16, 32, PALETTE.structure, PALETTE.structure]}
+          args={[16, 32, surface.gridAccent, surface.grid]}
           position={[0, -mm(OVERALL.centrelineHeight + EST.baseThk), 0]}
         />
 
@@ -119,15 +111,7 @@ export default function Scene() {
             RIGHT: THREE.MOUSE.PAN,
           }}
         />
-        <CameraHome
-          controls={controls}
-          box={{
-            halfWidth: mm(ASSEMBLY_BOUNDS.halfWidth),
-            halfHeight: mm(ASSEMBLY_BOUNDS.halfHeight),
-            halfDepth: mm(ASSEMBLY_BOUNDS.halfDepth),
-          }}
-          target={mmVec(ASSEMBLY_BOUNDS.centre)}
-        />
+        <CameraDirector controls={controls} />
       </Suspense>
     </Canvas>
   );

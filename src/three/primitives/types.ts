@@ -55,9 +55,19 @@ export interface PrimitiveProps {
   instance?: InstanceSpec;
   /** 0–1. Below 1 the material becomes transparent — used by isolate mode in Phase D. */
   opacity?: number;
-  /** Selection highlight, wired up in Phase D. */
+  /** Selection highlight — SPEC.md §7. */
   emissive?: string;
   emissiveIntensity?: number;
+  /**
+   * Cutaway — SPEC.md §7. When true the part's material carries the clipping
+   * planes from `three/clipping.ts`, so the near half of it disappears.
+   *
+   * It is a per-part flag rather than a renderer setting on purpose: the Cutaway
+   * exists to reveal the Piston, and a renderer-wide clip would cut the Piston in
+   * half along with everything else. Only the rows in `CUTAWAY_PART_IDS` ever
+   * receive it.
+   */
+  clip?: boolean;
   visible?: boolean;
   onClick?: (event: ThreeEvent<MouseEvent>) => void;
   onPointerOver?: (event: ThreeEvent<PointerEvent>) => void;

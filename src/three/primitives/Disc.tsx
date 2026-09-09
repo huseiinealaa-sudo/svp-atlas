@@ -29,6 +29,7 @@ export default function Disc({
   opacity = 1,
   emissive,
   emissiveIntensity,
+  clip = false,
   visible = true,
   onClick,
   onPointerOver,
@@ -46,6 +47,7 @@ export default function Disc({
     opacity,
     emissive,
     emissiveIntensity,
+    clip,
     side: innerR > 0 ? THREE.DoubleSide : THREE.FrontSide,
   });
 

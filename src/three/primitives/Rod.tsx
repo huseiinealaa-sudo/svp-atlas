@@ -27,6 +27,7 @@ export default function Rod({
   opacity = 1,
   emissive,
   emissiveIntensity,
+  clip = false,
   visible = true,
   onClick,
   onPointerOver,
@@ -44,6 +45,7 @@ export default function Rod({
     opacity,
     emissive,
     emissiveIntensity,
+    clip,
   });
 
   const geometry = useMemo(

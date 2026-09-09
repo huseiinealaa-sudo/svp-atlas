@@ -73,7 +73,8 @@ iPad; asking for approval on each file write would make the build impossible to 
 ## Phase tracker — update this line as you go
 
 ```
-CURRENT PHASE: C (complete — PR open toward main, awaiting approval). D not started.
+CURRENT PHASE: D (complete — PR open toward main, awaiting approval).
+C merged into main in f93c11c (PR #3). E not started.
 ```
 
 A skeleton · B primitives · C atlas (~91 parts) · D interaction · E content · F mechanism ·
@@ -83,6 +84,11 @@ that matters most.**
 ## Commands
 
 ```
-npm run dev      # dev server
-npm run build    # production build
+npm run dev              # dev server
+npm run build            # typecheck + production build
+npm run verify:explode   # proves explode 0 → 100 → 0 returns exact transforms
 ```
+
+`scripts/verify-interaction.mjs` drives the built application in a real browser at both
+iPad orientations. It needs a Playwright install and a served build, so it is not wired into
+`package.json`; the header comment in the file says how to run it.

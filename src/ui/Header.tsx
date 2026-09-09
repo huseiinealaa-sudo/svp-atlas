@@ -1,13 +1,15 @@
 import { PART_COUNT, SYSTEMS } from '../data/parts';
 import { SITE } from '../data/siteData';
+import SearchBar from './SearchBar';
 
 /**
  * SPEC.md §7 — the Human Atlas header: status dot, product name, identity line and
  * the live piece count, which is read from the part table rather than written down.
+ * The component search sits in the header bar, as the §7 mockup places it.
  */
 export default function Header() {
   return (
-    <header className="flex shrink-0 items-center justify-between gap-4 border-b border-edge bg-panel/80 px-4 py-3 backdrop-blur">
+    <header className="relative z-30 flex shrink-0 items-center justify-between gap-3 border-b border-edge bg-panel/80 px-4 py-3 backdrop-blur">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span
@@ -33,9 +35,7 @@ export default function Header() {
         </p>
       </div>
 
-      <span className="shrink-0 rounded-full border border-edge px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-muted">
-        Phase C · Atlas
-      </span>
+      <SearchBar />
     </header>
   );
 }

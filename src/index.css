@@ -3,6 +3,37 @@
 @tailwind utilities;
 
 @layer base {
+  /**
+   * SPEC.md §10 — the shell palette, as RGB channel triples so Tailwind can apply
+   * its own alpha (`bg-panel/80`) on top.
+   *
+   * `:root` is the specification's palette, unchanged and default. The light block
+   * is the same family's light ramp, not a second design — see src/data/theme.ts
+   * for why each value is the counterpart it is. The switch is a single attribute
+   * written by the theme toggle; nothing is persisted, per SPEC.md §1.2.
+   */
+  :root {
+    --c-ink: 13 17 23; /* #0d1117 */
+    --c-panel: 22 27 34; /* #161b22 */
+    --c-edge: 48 54 61; /* #30363d */
+    --c-accent: 210 153 34; /* #d29922 */
+    --c-muted: 125 133 144; /* #7d8590 */
+    --c-text: 230 237 243; /* #e6edf3 */
+    --c-shadow: 0 0 0;
+    color-scheme: dark;
+  }
+
+  :root[data-theme='light'] {
+    --c-ink: 246 248 250; /* #f6f8fa */
+    --c-panel: 255 255 255; /* #ffffff */
+    --c-edge: 208 215 222; /* #d0d7de */
+    --c-accent: 154 103 0; /* #9a6700 */
+    --c-muted: 87 96 106; /* #57606a */
+    --c-text: 31 35 40; /* #1f2328 */
+    --c-shadow: 31 35 40;
+    color-scheme: light;
+  }
+
   html,
   body,
   #root {
@@ -11,8 +42,8 @@
 
   body {
     margin: 0;
-    background-color: theme('colors.ink');
-    color: theme('colors.text');
+    background-color: rgb(var(--c-ink));
+    color: rgb(var(--c-text));
     font-family: theme('fontFamily.sans');
     -webkit-font-smoothing: antialiased;
     /* Touch-first: no rubber-band scroll, no double-tap zoom, no iOS text
@@ -38,5 +69,65 @@
   /* Arabic prose picks up its own face wherever it appears in an LTR container. */
   [lang='ar'] {
     font-family: theme('fontFamily.arabic');
+  }
+}
+
+@layer components {
+  /**
+   * The explode slider — SPEC.md §7.
+   *
+   * A native range input is the only control that already understands touch drag,
+   * keyboard arrows and screen readers. Restyling it takes vendor pseudo-elements,
+   * which Tailwind cannot reach, so the track and thumb live here. The thumb is
+   * 26 px of paint inside a 44 px tall control, so the hit target still clears
+   * SPEC.md §1.6 while the slider stays visually thin.
+   */
+  .explode-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 44px;
+    background: transparent;
+    touch-action: pan-y;
+    cursor: pointer;
+  }
+
+  .explode-range::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: rgb(var(--c-edge));
+  }
+
+  .explode-range::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: rgb(var(--c-edge));
+  }
+
+  .explode-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    margin-top: -11px;
+    border-radius: 999px;
+    border: 2px solid rgb(var(--c-ink));
+    background: rgb(var(--c-accent));
+  }
+
+  .explode-range::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    border: 2px solid rgb(var(--c-ink));
+    background: rgb(var(--c-accent));
+  }
+
+  .explode-range:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 4px rgb(var(--c-accent) / 0.3);
+  }
+
+  .explode-range:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 4px rgb(var(--c-accent) / 0.3);
   }
 }
